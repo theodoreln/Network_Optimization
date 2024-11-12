@@ -23,35 +23,74 @@ T = 5
 
 # Creation of the table d and p 
 d = fill(Inf, n, T)
-p = E = Matrix{Int}(undef, n, T)
+p = Matrix{Int}(undef, n, T)
 # Initialization
-d[D[r]["num"], :] .= 0
-p[D[r]["num"], :] .= D[r]["num"]
+d[D[r]["num"], 1] = 0
 
 # Loop for iteration
 for k in 1:T-1
-    println(k)
     for (key_i, dict_i) in D
         i = dict_i["num"]
         for (key_j, list_j) in dict_i["next"]
             j = D[key_j]["num"]
             cij = list_j[1]
-            println(i, j, cij)
-            println(d[i, k] + cij, " ", d[j, k])
-            if d[i, k] + cij < d[j, k]
+            if d[i, k] + cij < d[j, k+1]
                 d[j, k+1] = d[i, k] + cij
                 p[j, k+1] = i
-            else
-                if d[j, k+1] > d[j, k]
-                    d[j, k+1] = d[j, k]
-                    p[j, k+1] = p[j, k]
-                end
             end
-            println(d)
         end
     end
 end
 
 # Return the optimal solution
-println("The shortest path to ", s, " is of length : ", d[D[s]["num"], T])
-print(p)
+println(d)
+println(p)
+
+# Find the shortest path with T stops
+function shortest_path_T(s, D, E)
+    prev = p[D[s]["num"], T]
+
+    L = [prev, D[s]["num"]]
+    for k in (T-1):-1:1
+        previous = p[prev, k]
+        if previous == 0
+            i = 1
+        else
+            pushfirst!(L, previous)
+        end
+        prev = previous
+    end
+
+    println("And it visits those nodes : ")
+    for value in L
+        print(E[value], "  ")
+    end
+end
+
+dist_min_T = d[D[s]["num"], T]
+println("The shortest path in ", T, " nodes to ", s, " is of length : ", dist_min_T)
+shortest_path_T(s, D, E)
+println(" ")
+
+# Find the absolute shortesr path 
+function shortest_path(s, D, E)
+    dist_argmin = argmin(d[D[s]["num"], :])
+    prev = p[D[s]["num"], dist_argmin]
+
+    M = [prev, D[s]["num"]]
+    for k in (dist_argmin-1):-1:(T-dist_argmin+1)
+        previous = p[prev, k]
+        pushfirst!(M, previous)
+        prev = previous
+    end
+
+    println("And it visits those nodes : ")
+    for value in M
+        print(E[value], "  ")
+    end
+end
+
+dist_min = minimum(d[D[s]["num"], :])
+println("The shortest path to ", s, " is of length : ", dist_min)
+shortest_path(s, D, E)
+
